@@ -1,13 +1,36 @@
 <!doctype html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewpoint" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.1/dist/leaflet.css"
+integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14="
+crossorigin="">
+
+  <script src="https://unpkg.com/leaflet@1.9.1/dist/leaflet.js"
+ integrity="sha256-NDI0K41gVbWqfkkaHj15IzU7PtMoelkzyKp8TOaFQ3s=" crossorigin=""></script>
+
+  <script src="javascript/secret_keys.js"></script>
 <title>Hello World Title!</title>
 </head>
-<body>
 Hello World
 
   <div>
       <script src="javascript/external.js"></script>
     </div>
+    <h3>Geocoding Map</h3>
+<br>
+
+<div id="mapid" style="width: 600px; height: 400px; margin: auto; bottom: 30px;">
+    <script>
+        var mymap = L.map('mapid').setView([51.505, -0.09], 13);
+        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
+                   maxZoom: 18,
+                   accessToken: mapbox_access_token
+               }).addTo(mymap);
+    </script>
+</div>
+
 </body>
 </html>
