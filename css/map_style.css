@@ -1,0 +1,29 @@
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+    background: #f5f0e8;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 12px;
+    padding: 5px;
+}
+
+.leaflet-popup-content {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    line-height: 1.4;
+}
+
+.leaflet-popup-content img {
+    width: 200px;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-top: 8px;
+    margin-bottom: 5px;
+}
+.custom-marker {
+    font-size: 35px;
+    text-align: center;
+    line-height: 40px;
+}
