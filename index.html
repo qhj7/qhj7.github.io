@@ -11,6 +11,9 @@ crossorigin="">
   <script src="https://unpkg.com/leaflet@1.9.1/dist/leaflet.js"
  integrity="sha256-NDI0K41gVbWqfkkaHj15IzU7PtMoelkzyKp8TOaFQ3s=" crossorigin=""></script>
 
+ <link rel="stylesheet" href="https://api.mapbox.com/mapbox.js/v3.3.1/mapbox.css">
+ <script src="https://api.mapbox.com/mapbox.js/v3.3.1/mapbox.js"></script>
+
   <script src="javascript/secret_keys.js"></script>
 <title>Hello World Title!</title>
 </head>
@@ -24,11 +27,67 @@ Hello World
 
 <div id="mapid" style="width: 600px; height: 400px; margin: auto; bottom: 30px;">
     <script>
-        var mymap = L.map('mapid').setView([51.505, -0.09], 13);
-        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
-                   maxZoom: 18,
-                   accessToken: mapbox_access_token
-               }).addTo(mymap);
+        var mymap = L.map('mapid');
+        /*
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+      maxZoom: 18,
+    id: 'mapbox/dark-v10',
+      accessToken: mapbox_access_token
+  }).addTo(mymap);*/
+
+  L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {}).addTo(mymap);
+     var marker = L.marker([51.5, -0.09]).addTo(mymap);
+
+     marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup();
+
+     var circle = L.circle([51.508, -0.11], {
+    color: 'red',
+    fillColor: '#f03',
+    fillOpacity: 0.5,
+    radius: 500
+}).addTo(mymap);
+
+circle.bindPopup("I am a circle.");
+
+
+
+var polygon = L.polygon([
+    [51.509, -0.08],
+    [51.503, -0.06],
+    [51.51, -0.047]
+]).addTo(mymap);
+
+polygon.bindPopup("I am a polygon.");
+
+var popup = L.popup()
+    .setLatLng([51.513, -0.09])
+    .setContent("I am a standalone popup.")
+    .openOn(mymap);
+
+    function onMapClick(e) {
+    popup
+        .setLatLng(e.latlng)
+        .setContent("You clicked the map at " + e.latlng.toString())
+        .openOn(mymap);
+}
+
+mymap.on('click', onMapClick);
+
+
+var ZoomViewer = L.Control.extend({ onAdd: function(){
+    var gauge = L.DomUtil.create('div');
+    gauge.style.width = '200px';
+    gauge.style.background = 'rgba(255,255,255,0.5)';
+    gauge.style.textAlign = 'left';
+
+    mymap.on('zoomstart zoom zoomend', function(ev){
+    gauge.innerHTML = 'Zoom level: ' + mymap.getZoom();
+})
+return gauge;
+}
+});
+(new ZoomViewer).addTo(mymap);
+mymap.setView([0,0], 1);
     </script>
 </div>
 
