@@ -58,3 +58,26 @@ h1 {
   left: 50%;
   transform: translateX(-50%) translateY(-50%);
 }
+
+#webmap-reviews {
+  clear: both;
+  padding: 20px;
+  text-align: left;
+  font-size: 18px;
+}
+
+#webmap-reviews table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#webmap-reviews td {
+  border: 1px solid #cccccc;
+  padding: 12px;
+  overflow-wrap: anywhere;
+}
+
+#webmap-reviews tr:nth-child(odd) {
+  background-color: #e1edf5;
+  font-weight: bold;
+}

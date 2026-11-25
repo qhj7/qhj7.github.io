@@ -35,16 +35,24 @@ function welcome()
   return message;
 }
 
-f
+
+
 function webmap_table()
 {
-  document.write("<table width=100%>");
+  document.write("<table width='100%'>");
 
-  for (var row = 0; row < webmaps.length; row++) {
+  for (var row = 0; row < webmaps.length * 2; row++) {
     document.write("<tr>");
 
-    for (var column = 0; column < webmaps[0].length; column++) {
-      document.write("<td>" + webmaps[row][column] + "</td>");
+    var map = Math.floor(row / 2);
+
+    for (var column = 0; column < 2; column++) {
+      if (row % 2 == 0) {
+        document.write("<td>" + webmaps[map][column] + "</td>");
+      } else {
+        document.write("<td colspan='2'>" + webmaps[map][2] + "</td>");
+        break;
+      }
     }
 
     document.write("</tr>");
