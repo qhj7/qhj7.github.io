@@ -1,0 +1,476 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Global Air Transportation & Logistics</title>
+
+  <!-- Load the ArcGIS JavaScript API -->
+  <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/dark/main.css">
+  <script src="https://js.arcgis.com/4.21/"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: #101e30;
+      color: white;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header and navigation menu */
+    #header {
+      background: #101e30;
+      padding: 20px 30px;
+      border-bottom: 2px solid #d4af70;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    #header h1 {
+      color: #e4c58d;
+      font-size: 27px;
+      letter-spacing: 2px;
+      margin: 0;
+    }
+
+    #header p {
+      color: #b5c4d6;
+      font-size: 14px;
+      margin-bottom: 0;
+    }
+
+    /* Interactive map container */
+    #viewDiv {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+    }
+
+    /* Airport query panel */
+    #optionsDiv {
+      background: #16283e;
+      color: white;
+      width: 280px;
+      padding: 22px;
+      border: 1px solid #d4af70;
+      border-radius: 8px;
+    }
+
+    #optionsDiv h2 {
+      color: #e4c58d;
+      margin-top: 0;
+    }
+
+    #optionsDiv p {
+      color: #bdcadd;
+      line-height: 1.5;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #e4c58d;
+    }
+
+    select {
+      padding: 10px;
+      background: #243b53;
+      color: white;
+      border: 1px solid #64748b;
+      border-radius: 4px;
+    }
+
+    #optionsDiv select {
+      width: 100%;
+      margin-top: 7px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 4px;
+      background: #d4af70;
+      color: #101e30;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #edd5aa;
+    }
+
+    #resetBtn {
+      background: #243b53;
+      color: white;
+    }
+
+    #printResults {
+      color: #e4c58d;
+      font-weight: bold;
+    }
+
+    /* Map legend */
+    #legend {
+      background: #16283e;
+      padding: 12px 18px;
+      border-radius: 5px;
+      color: white;
+      font-size: 13px;
+    }
+
+    /* Copyright footer */
+    #copyright {
+      background: #101e30;
+      color: #b5c4d6;
+      text-align: center;
+      font-size: 12px;
+      padding: 10px;
+      border-top: 1px solid #d4af70;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Page title and links to previous lab maps -->
+  <div id="header">
+    <div>
+      <h1>GLOBAL AIR TRANSPORTATION & LOGISTICS</h1>
+      <p>Exploring airport locations and international transportation infrastructure</p>
+    </div>
+
+    <select id="mapMenu">
+      <option value="">Explore My Lab 7 Maps</option>
+      <option value="simple_mapping.html">Simple Mapping</option>
+      <option value="tile_layer.html">Tile Layers</option>
+      <option value="dynamic_layers.html">Dynamic Layers</option>
+      <option value="on_event.html">View on Event</option>
+      <option value="basemap_gallery.html">Basemap Gallery</option>
+      <option value="query_task.html">Spatial Query</option>
+    </select>
+  </div>
+
+  <!-- Map display -->
+  <div id="viewDiv"></div>
+
+  <!-- Interactive airport query controls -->
+  <div id="optionsDiv" class="esri-widget">
+    <h2>Airport Explorer</h2>
+    <p>Explore the geographic distribution of airports using the available dataset attributes.</p>
+
+    <label for="attSelect">Search by</label>
+    <select id="attSelect">
+      <option value="City">City</option>
+      <option value="Code">Airport Code</option>
+      <option value="Year">Recorded Year</option>
+    </select>
+
+    <label for="valSelect">Select a value</label>
+    <select id="valSelect">
+      <option value="">Loading data...</option>
+    </select>
+
+    <button id="doBtn">SEARCH AIRPORTS</button>
+    <button id="resetBtn">RESET MAP</button>
+
+    <p id="printResults">Loading airport locations...</p>
+  </div>
+
+  <!-- Legend explains the map symbols -->
+  <div id="legend">
+    <span style="color:#d4af70;">&#9679;</span> Airport location
+    <br><br>
+    <span style="color:#00e5ff;">&#9679;</span> Selected airport
+  </div>
+
+  <!-- Copyright information -->
+  <div id="copyright">
+    Copyright &copy; <span id="year"></span>
+    Itsy Sanchez | Airport Data: Esri
+  </div>
+
+  <script>
+
+    // Automatically display the current year.
+    document.getElementById("year").textContent =
+      new Date().getFullYear();
+
+    // Open previous lab maps in new browser tabs.
+    document.getElementById("mapMenu").onchange = function() {
+      if (this.value) {
+        window.open(this.value, "_blank", "noopener");
+        this.selectedIndex = 0;
+      }
+    };
+
+    // Import the required ArcGIS modules.
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/TileLayer",
+      "esri/layers/FeatureLayer",
+      "esri/layers/GraphicsLayer",
+      "esri/widgets/Home",
+      "esri/widgets/ScaleBar"
+    ], function(Map, MapView, TileLayer, FeatureLayer,
+      GraphicsLayer, Home, ScaleBar) {
+
+      // Load the transportation reference tile layer.
+      var transportationLayer = new TileLayer({
+        url: "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer",
+        opacity: 0.35
+      });
+
+      // Load airports from the assigned Esri services directory.
+      var airportsLayer = new FeatureLayer({
+        url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/ArcGIS/rest/services/Airports/FeatureServer/0",
+        outFields: ["*"],
+
+        // Display airport locations as gold markers.
+        renderer: {
+          type: "simple",
+          symbol: {
+            type: "simple-marker",
+            color: "#d4af70",
+            size: 9,
+            outline: {
+              color: "#ffffff",
+              width: 0.7
+            }
+          }
+        },
+
+        // Display airport attributes in an interactive popup.
+        popupTemplate: {
+          title: "{City} Airport ({Code})",
+          content: [{
+            type: "fields",
+            fieldInfos: [
+              {
+                fieldName: "Code",
+                label: "Airport Code"
+              },
+              {
+                fieldName: "City",
+                label: "City"
+              },
+              {
+                fieldName: "Year",
+                label: "Recorded Year",
+                format: {
+                  digitSeparator: false,
+                  places: 0
+                }
+              }
+            ]
+          }]
+        }
+      });
+
+      // Create a separate graphics layer for query results.
+      var resultsLayer = new GraphicsLayer();
+
+      // Create the map and add geographic layers.
+      var map = new Map({
+        basemap: "dark-gray-vector",
+        layers: [
+          transportationLayer,
+          airportsLayer,
+          resultsLayer
+        ]
+      });
+
+      // Set the initial global map extent.
+      var view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: [10, 20],
+        zoom: 2
+      });
+
+      // Add navigation and scale widgets.
+      var home = new Home({
+        view: view
+      });
+
+      var scaleBar = new ScaleBar({
+        view: view,
+        unit: "dual"
+      });
+
+      view.ui.add(home, "top-left");
+      view.ui.add(scaleBar, "bottom-left");
+      view.ui.add("optionsDiv", "top-right");
+      view.ui.add("legend", "bottom-right");
+
+      // Reference the HTML query controls.
+      var attribute = document.getElementById("attSelect");
+      var valueMenu = document.getElementById("valSelect");
+      var resultsText = document.getElementById("printResults");
+
+      // Populate the value menu using actual dataset attributes.
+      async function loadValues() {
+
+        valueMenu.innerHTML =
+          '<option value="">Loading values...</option>';
+
+        document.getElementById("doBtn").disabled = true;
+
+        try {
+          var query = airportsLayer.createQuery();
+
+          query.where = "1=1";
+          query.outFields = [attribute.value];
+          query.returnGeometry = false;
+          query.returnDistinctValues = true;
+          query.orderByFields = [attribute.value];
+
+          var response = await airportsLayer.queryFeatures(query);
+
+          var values = response.features.map(function(feature) {
+            return feature.attributes[attribute.value];
+          });
+
+          values = values.filter(function(value) {
+            return value !== null && value !== "";
+          });
+
+          values = Array.from(new Set(values));
+
+          valueMenu.innerHTML = "";
+
+          values.forEach(function(value) {
+            var option = document.createElement("option");
+            option.value = value;
+            option.textContent = value;
+            valueMenu.appendChild(option);
+          });
+
+          resultsText.textContent = values.length +
+            " available search values.";
+
+          document.getElementById("doBtn").disabled =
+            values.length === 0;
+
+        } catch (error) {
+          resultsText.textContent = "Unable to load search values.";
+          console.error(error);
+        }
+      }
+
+      // Load the search options when the layer is ready.
+      airportsLayer.when(function() {
+        loadValues();
+      });
+
+      // Update the value menu whenever the search field changes.
+      attribute.onchange = loadValues;
+
+      // Execute the selected airport query.
+      document.getElementById("doBtn").onclick = async function() {
+
+        resultsLayer.removeAll();
+        view.popup.close();
+
+        var field = attribute.value;
+        var selectedValue = valueMenu.value;
+
+        if (selectedValue === "") {
+          return;
+        }
+
+        var query = airportsLayer.createQuery();
+
+        // Construct an SQL expression based on the field type.
+        if (field === "Year") {
+          query.where = field + " = " + Number(selectedValue);
+        } else {
+          query.where = field + " = '" +
+            selectedValue.replace(/'/g, "''") + "'";
+        }
+
+        query.returnGeometry = true;
+        query.outFields = ["*"];
+
+        try {
+          var response = await airportsLayer.queryFeatures(query);
+
+          // Change matching airport symbols to cyan.
+          var results = response.features.map(function(feature) {
+
+            feature.symbol = {
+              type: "simple-marker",
+              color: "#00e5ff",
+              size: 16,
+              outline: {
+                color: "white",
+                width: 2
+              }
+            };
+
+            feature.popupTemplate = airportsLayer.popupTemplate;
+
+            return feature;
+          });
+
+          resultsLayer.addMany(results);
+
+          resultsText.textContent =
+            results.length + " matching airport records found!";
+
+          // Automatically zoom to the selected airports.
+          if (results.length === 1) {
+            await view.goTo({
+              target: results[0].geometry,
+              zoom: 10
+            });
+
+            view.popup.open({
+              features: results,
+              location: results[0].geometry
+            });
+
+          } else if (results.length > 1) {
+
+            await view.goTo(results);
+
+            view.popup.open({
+              features: results,
+              featureMenuOpen: true
+            });
+          }
+
+        } catch (error) {
+          resultsText.textContent = "Query failed. Please try again.";
+          console.error(error);
+        }
+      };
+
+      // Reset the map to its original extent.
+      document.getElementById("resetBtn").onclick = function() {
+
+        resultsLayer.removeAll();
+        view.popup.close();
+
+        view.goTo({
+          center: [10, 20],
+          zoom: 2
+        });
+
+        resultsText.textContent = "Select your search criteria.";
+      };
+    });
+  </script>
+
+</body>
+</html>
